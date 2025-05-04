@@ -1,5 +1,9 @@
 # Chest X‑Ray Diagnosis with Uncertainty Quantification
 
+![image](https://github.com/user-attachments/assets/d0882c99-196d-4ba3-9e0e-efe306fd81a6)
+figure: Web Page running on EC2 instance(output)
+
+
 ## Running on EC2, link to application: 
 http://ec2-3-136-26-198.us-east-2.compute.amazonaws.com:5000/
 
