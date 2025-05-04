@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Chest X-Ray Diagnosis Report</title>
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.4.1/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+  <style>
+    body {
+      background: #e0e7ff;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    .container {
+      max-width: 100%;
+    }
+    h1 {
+      background: linear-gradient(90deg, #4f46e5, #3b82f6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      font-weight: 700;
+      margin-bottom: 2rem;
+    }
+    /* .card {
+      border-radius: 20px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    } */
+    .btn-primary {
+      background-color: #4f46e5;
+      border-color: #4f46e5;
+    }
+    .btn-primary:hover {
+      background-color: #4338ca;
+      border-color: #4338ca;
+    }
+    #image-preview {
+      max-width: 100%;
+      height: auto;
+      border-radius: 10px;
+      border: 2px solid #ddd;
+    }
+    .interpretation {
+      font-size: 1.2rem;
+      font-weight: 500;
+      margin-bottom: 1.5rem;
+    }
+    .report-table thead th {
+      background-color: #4f46e5;
+      color: #fff;
+    }
+    .report-table tbody tr:hover {
+      background-color: #f0f4ff;
+      cursor: default;
+    }
+    .badge-confidence {
+      background-color: #3b82f6;
+      font-size: 0.9rem;
+    }
+    .badge-uncertainty {
+      background-color: #f59e0b;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container d-flex flex-column align-items-center py-5" style="margin-left: 30%;margin-right: 20%;">
+    <h1 class="text-center">Chest X-Ray Diagnosis Report</h1>
+
+    <!-- Upload Card -->
+    <div class="card w-100 mb-4" style="max-width: 67%;">
+        <div class="card-body">
+          <form id="uploadForm" class="d-flex justify-content-center">
+            <div class="input-group" style="max-width: 100%;margin-left: 9%;">
+              <label class="input-group-text" for="file-input"><i class="bi bi-upload"></i></label>
+              <input type="file" class="form-control" id="file-input" name="file" accept="image/*" required />
+              <button class="btn btn-primary" type="submit"><i class="bi bi-gear-fill me-1"></i>Analyze</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+    <!-- Report Content -->
+    <div id="report" class="w-100 shadow" style="max-width: 100%; display: none;">
+        <!-- Add text-center to card-body -->
+        <div class="card-body text-center">
+          <!-- Image Preview -->
+          <img id="image-preview" src="#" alt="X-ray Preview" style="margin-left: 7%;" />
+  
+          <!-- Diagnosis Summary -->
+          <h3 class="mb-2">Diagnosis Summary</h3>
+          <p id="interpretation" class="interpretation"></p>
+  
+          <!-- Detailed Report Table -->
+          <h4 class="mt-4 mb-3">Detailed Report</h4>
+          <div class="table-responsive d-flex justify-content-center">
+            <table class="table report-table mb-0" style="width: auto;">
+              <thead>
+                <tr>
+                  <th><i class="bi bi-card-list me-1"></i>Condition</th>
+                  <th><i class="bi bi-bar-chart-fill me-1"></i>Confidence</th>
+                  <th><i class="bi bi-exclamation-triangle-fill me-1"></i>Uncertainty</th>
+                </tr>
+              </thead>
+              <tbody id="report-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+  </div>
+
+  <script>
+    const form = document.getElementById('uploadForm');
+    const report = document.getElementById('report');
+    const preview = document.getElementById('image-preview');
+    const interpretation = document.getElementById('interpretation');
+    const reportBody = document.getElementById('report-body');
+
+    form.addEventListener('submit', async e => {
+      e.preventDefault();
+      report.style.display = 'none';
+      reportBody.innerHTML = '';
+      interpretation.textContent = '';
+
+      const fileInput = form.querySelector('input[type=file]');
+      const file = fileInput.files[0];
+      const reader = new FileReader();
+      reader.onload = () => { preview.src = reader.result; };
+      reader.readAsDataURL(file);
+
+      const data = new FormData(form);
+      const res = await fetch('/predict', { method: 'POST', body: data });
+      const json = await res.json();
+
+      const entries = Object.entries(json)
+        .map(([label, {conf, uncertainty}]) => ({
+          label,
+          conf: parseFloat((conf*100).toFixed(1)),
+          unc: parseFloat((uncertainty*100).toFixed(2))
+        }))
+        .sort((a, b) => b.conf - a.conf);
+
+      entries.forEach(({label, conf, unc}) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${label}</td>
+          <td><span class="badge badge-confidence">${conf}%</span></td>
+          <td><span class="badge badge-uncertainty">${unc}%</span></td>
+        `;
+        reportBody.appendChild(row);
+      });
+
+      if (entries.length) {
+        const top = entries[0];
+        interpretation.textContent =
+          `Most likely finding: ${top.label} with ${top.conf}% confidence (uncertainty ${top.unc}%).`;
+      }
+
+      report.style.display = 'block';
+    });
+  </script>
+</body>
+</html>
