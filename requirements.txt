@@ -2,3 +2,7 @@ flask
 torch
 efficientnet_pytorch
 opencv-python
+pillow
+torchvision
+torchaudio
+flask-cors
