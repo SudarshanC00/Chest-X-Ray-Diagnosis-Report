@@ -1,5 +1,8 @@
 # Chest X‑Ray Diagnosis with Uncertainty Quantification
 
+## Running on EC2, link to application: 
+http://ec2-3-136-26-198.us-east-2.compute.amazonaws.com:5000/
+
 This project implements a **Bayesian Convolutional Neural Network** for multi-label classification of chest X-rays (CheXpert dataset). By integrating Monte Carlo Dropout and Grad-CAM explainability, it not only predicts pathologies but also quantifies model confidence—critical for deployment in medical contexts.
 
 ## Technical Highlights
